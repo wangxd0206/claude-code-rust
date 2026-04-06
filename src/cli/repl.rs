@@ -195,8 +195,9 @@ impl Repl {
                     "assistant" => "🤖 助手",
                     _ => "❓ 未知",
                 };
-                let preview: String = msg.content.chars().take(50).collect();
-                let suffix = if msg.content.len() > 50 { "..." } else { "" };
+                let content = msg.content.as_deref().unwrap_or("");
+                let preview: String = content.chars().take(50).collect();
+                let suffix = if content.len() > 50 { "..." } else { "" };
                 println!("  {}. {}: {}{}", i + 1, role, preview, suffix);
             }
         }

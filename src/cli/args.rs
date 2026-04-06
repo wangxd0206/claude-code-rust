@@ -64,6 +64,9 @@ impl Cli {
             Some(super::Commands::StressTest { concurrency, iterations }) => {
                 self.run_stress_test(*concurrency, *iterations).await?;
             }
+            Some(super::Commands::Skills { action }) => {
+                self.run_skills(action).await?;
+            }
             None => {
                 self.run_repl(state, None)?;
             }
@@ -555,6 +558,27 @@ impl Cli {
     async fn run_stress_test(&self, concurrency: usize, iterations: usize) -> anyhow::Result<()> {
         use crate::services::run_stress_test;
         run_stress_test(concurrency, iterations).await;
+        Ok(())
+    }
+
+    async fn run_skills(&self, action: &super::SkillsCommands) -> anyhow::Result<()> {
+        match action {
+            super::SkillsCommands::List => {
+                println!("Available skills:");
+                println!("  - simplify: Review and simplify code");
+                println!("  - loop: Run recurring tasks");
+                println!("  - schedule: Schedule automated tasks");
+            }
+            super::SkillsCommands::Execute { skill, args } => {
+                println!("Executing skill: {} with args: {:?}", skill, args);
+            }
+            super::SkillsCommands::Help { skill } => {
+                println!("Help for skill: {}", skill);
+            }
+            super::SkillsCommands::Search { query } => {
+                println!("Searching skills for: {}", query);
+            }
+        }
         Ok(())
     }
 }

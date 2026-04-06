@@ -13,6 +13,13 @@ pub struct SettingsPanel {
     pub auto_save: bool,
     pub notifications: bool,
     pub telemetry: bool,
+
+    /// Callback for saving settings
+    on_save_settings: Option<Box<dyn Fn() + Send>>,
+    /// Callback for testing connection
+    on_test_connection: Option<Box<dyn Fn() + Send>>,
+    /// Test result display
+    test_result: Option<(bool, String)>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -36,11 +43,54 @@ impl Default for SettingsPanel {
             auto_save: true,
             notifications: true,
             telemetry: false,
+
+            on_save_settings: None,
+            on_test_connection: None,
+            test_result: None,
         }
     }
 }
 
 impl SettingsPanel {
+    /// Set save settings callback
+    pub fn set_on_save_settings<F>(&mut self, callback: F)
+    where
+        F: Fn() + Send + 'static,
+    {
+        self.on_save_settings = Some(Box::new(callback));
+    }
+
+    /// Set test connection callback
+    pub fn set_on_test_connection<F>(&mut self, callback: F)
+    where
+        F: Fn() + Send + 'static,
+    {
+        self.on_test_connection = Some(Box::new(callback));
+    }
+
+    /// Set test result display
+    pub fn set_test_result(&mut self, success: bool, message: String) {
+        self.test_result = Some((success, message));
+    }
+
+    /// Load settings from configuration
+    pub fn load_from_settings(&mut self, settings: &crate::config::Settings) {
+        self.api_key = settings.api.api_key.clone().unwrap_or_default();
+        self.base_url = settings.api.get_base_url();
+        self.model = settings.model.clone();
+    }
+
+    /// Save settings to configuration
+    pub fn save_to_settings(&self, settings: &mut crate::config::Settings) {
+        settings.api.api_key = if self.api_key.is_empty() {
+            None
+        } else {
+            Some(self.api_key.clone())
+        };
+        settings.api.base_url = self.base_url.clone();
+        settings.model = self.model.clone();
+    }
+
     /// Render the settings panel
     pub fn ui(&mut self, ui: &mut Ui, theme: &super::Theme) {
         ui.horizontal(|ui| {
@@ -225,19 +275,52 @@ impl SettingsPanel {
 
         ui.add_space(16.0);
 
-        // Test connection button
-        let test_button = egui::Button::new(
-            RichText::new("🔄 Test Connection")
+        // Save button
+        let save_button = egui::Button::new(
+            RichText::new("💾 Save Settings")
                 .strong()
-                .color(Color32::WHITE)
+                .color(Color32::WHITE),
         )
-        .fill(theme.primary_color())
+        .fill(theme.success_color())
         .min_size(Vec2::new(150.0, 36.0))
         .rounding(8.0);
 
-        if ui.add(test_button).clicked() {
-            // Test API connection
+        if ui.add(save_button).clicked() {
+            if let Some(callback) = &self.on_save_settings {
+                callback();
+            }
         }
+
+        ui.add_space(16.0);
+
+        // Test connection button
+        ui.horizontal(|ui| {
+            let test_button = egui::Button::new(
+                RichText::new("🔄 Test Connection")
+                    .strong()
+                    .color(Color32::WHITE),
+            )
+            .fill(theme.primary_color())
+            .min_size(Vec2::new(150.0, 36.0))
+            .rounding(8.0);
+
+            if ui.add(test_button).clicked() {
+                if let Some(callback) = &self.on_test_connection {
+                    callback();
+                }
+            }
+
+            // Show test result
+            if let Some((success, message)) = &self.test_result {
+                ui.add_space(8.0);
+                let (icon, color) = if *success {
+                    ("✅", theme.success_color())
+                } else {
+                    ("❌", theme.error_color())
+                };
+                ui.label(RichText::new(format!("{} {}", icon, message)).color(color));
+            }
+        });
     }
 
     fn render_appearance_settings(&mut self, ui: &mut Ui, theme: &super::Theme) {

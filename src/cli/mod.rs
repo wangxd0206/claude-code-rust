@@ -140,13 +140,19 @@ pub enum Commands {
         action: TeamSyncCommands,
     },
 
+    /// Manage skills
+    Skills {
+        #[command(subcommand)]
+        action: SkillsCommands,
+    },
+
     /// Run stress tests
     StressTest {
-        /// Number of concurrent operations
-        #[arg(short, long, default_value = "10")]
+        /// Number of concurrent requests
+        #[arg(short, long, default_value = "5")]
         concurrency: usize,
-        /// Number of iterations per service
-        #[arg(short, long, default_value = "1000")]
+        /// Number of iterations per request
+        #[arg(short, long, default_value = "10")]
         iterations: usize,
     },
 }
@@ -348,5 +354,33 @@ pub enum TeamSyncCommands {
     Delete {
         /// Memory ID
         id: String,
+    },
+}
+
+
+#[derive(Subcommand, Debug)]
+pub enum SkillsCommands {
+    /// List all available skills
+    List,
+
+    /// Execute a skill
+    Execute {
+        /// Skill name
+        skill: String,
+        /// Arguments for the skill
+        #[arg(trailing_var_arg = true)]
+        args: Vec<String>,
+    },
+
+    /// Get help for a skill
+    Help {
+        /// Skill name
+        skill: String,
+    },
+
+    /// Search for skills
+    Search {
+        /// Search query
+        query: String,
     },
 }

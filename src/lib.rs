@@ -29,6 +29,7 @@ pub mod services;
 pub mod session;
 pub mod terminal;
 pub mod advanced;
+pub mod skills;
 
 // Feature-gated modules
 #[cfg(feature = "wasm")]
@@ -49,7 +50,7 @@ pub use mcp::McpManager;
 pub use voice::VoiceInput;
 pub use memory::MemoryManager;
 pub use plugins::PluginManager;
-pub use advanced::{SshClient, RemoteExecutor, ProjectInitializer};
+pub use skills::{Skill, SkillRegistry, SkillExecutor, SkillContext, SkillParams, SkillResult, SkillError, SkillCategory};
 
 // Feature-gated re-exports
 #[cfg(feature = "wasm")]

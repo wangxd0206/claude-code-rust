@@ -150,20 +150,21 @@ impl SamplingManager {
         let messages: Vec<crate::api::ChatMessage> = request.messages.iter()
             .map(|m| crate::api::ChatMessage {
                 role: m.role.clone(),
-                content: m.content.text.clone(),
+                content: Some(m.content.text.clone()),
                 tool_calls: None,
+                tool_call_id: None,
             })
             .collect();
-        
-        let response = api_client.chat(messages).await?;
-        
+
+        let response = api_client.chat(messages, None).await?;
+
         if let Some(choice) = response.choices.first() {
             let usage = response.usage.as_ref();
             Ok(SamplingResponse {
                 model: response.model.clone(),
                 content: SamplingContent {
                     content_type: "text".to_string(),
-                    text: choice.message.content.clone(),
+                    text: choice.message.content.clone().unwrap_or_default(),
                 },
                 stop_reason: Some(choice.finish_reason.clone().unwrap_or_default()),
                 usage: Some(SamplingUsage {

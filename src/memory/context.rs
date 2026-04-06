@@ -155,8 +155,9 @@ impl ContextWindow {
         self.entries.iter()
             .map(|e| crate::api::ChatMessage {
                 role: e.role.clone(),
-                content: e.content.clone(),
+                content: Some(e.content.clone()),
                 tool_calls: None,
+                tool_call_id: None,
             })
             .collect()
     }

@@ -200,15 +200,16 @@ Output only the updated document content, nothing else."#,
         let messages = vec![
             crate::api::ChatMessage {
                 role: "user".to_string(),
-                content: prompt,
+                content: Some(prompt),
                 tool_calls: None,
+                tool_call_id: None,
             },
         ];
 
-        let response = api_client.chat(messages).await?;
-        
+        let response = api_client.chat(messages, None).await?;
+
         if let Some(choice) = response.choices.first() {
-            return Ok(choice.message.content.clone());
+            return Ok(choice.message.content.clone().unwrap_or_default());
         }
 
         Ok(current_content.to_string())

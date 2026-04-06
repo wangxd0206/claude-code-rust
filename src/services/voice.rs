@@ -207,20 +207,22 @@ impl VoiceService {
         let messages = vec![
             crate::api::ChatMessage {
                 role: "system".to_string(),
-                content: prompt.to_string(),
+                content: Some(prompt.to_string()),
                 tool_calls: None,
+                tool_call_id: None,
             },
             crate::api::ChatMessage {
                 role: "user".to_string(),
-                content: format!("[Audio data: {} bytes]", audio_data.len()),
+                content: Some(format!("[Audio data: {} bytes]", audio_data.len())),
                 tool_calls: None,
+                tool_call_id: None,
             },
         ];
 
-        let response = api_client.chat(messages).await?;
+        let response = api_client.chat(messages, None).await?;
         
         if let Some(choice) = response.choices.first() {
-            return Ok(choice.message.content.clone());
+            return Ok(choice.message.content.clone().unwrap_or_default());
         }
 
         Ok(String::new())

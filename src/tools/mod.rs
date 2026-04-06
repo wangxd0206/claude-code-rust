@@ -6,6 +6,9 @@ pub mod file_write;
 pub mod execute_command;
 pub mod search;
 pub mod list_files;
+pub mod git_operations;
+pub mod task_management;
+pub mod note_edit;
 
 pub use file_read::FileReadTool;
 pub use file_edit::FileEditTool;
@@ -13,6 +16,9 @@ pub use file_write::FileWriteTool;
 pub use execute_command::ExecuteCommandTool;
 pub use search::SearchTool;
 pub use list_files::ListFilesTool;
+pub use git_operations::GitOperationsTool;
+pub use task_management::TaskManagementTool;
+pub use note_edit::NoteEditTool;
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -23,15 +29,27 @@ use std::collections::HashMap;
 pub trait Tool: Send + Sync {
     /// Tool name
     fn name(&self) -> &str;
-    
+
     /// Tool description
     fn description(&self) -> &str;
-    
+
     /// Tool input schema
     fn input_schema(&self) -> serde_json::Value;
-    
+
     /// Execute the tool
     async fn execute(&self, input: serde_json::Value) -> Result<ToolOutput, ToolError>;
+
+    /// Convert to OpenAI-compatible function definition
+    fn tool_definition(&self) -> serde_json::Value {
+        serde_json::json!({
+            "type": "function",
+            "function": {
+                "name": self.name(),
+                "description": self.description(),
+                "parameters": self.input_schema()
+            }
+        })
+    }
 }
 
 /// Tool output
@@ -74,6 +92,9 @@ impl ToolRegistry {
         registry.register(Box::new(execute_command::ExecuteCommandTool::new()));
         registry.register(Box::new(search::SearchTool::new()));
         registry.register(Box::new(list_files::ListFilesTool::new()));
+        registry.register(Box::new(git_operations::GitOperationsTool::new()));
+        registry.register(Box::new(task_management::TaskManagementTool::new()));
+        registry.register(Box::new(note_edit::NoteEditTool::new()));
         
         registry
     }

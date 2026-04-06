@@ -488,7 +488,11 @@ Overall Performance Improvement: 60%
 - [x] 配置管理系统
 - [x] REPL 交互模式
 - [x] MCP 协议支持
-- [x] 工具系统 (文件操作、命令执行)
+- [x] 工具系统 (文件操作、命令执行、搜索、列表)
+- [x] **Git 操作工具** - status, add, commit, push, pull, log, diff, branch, checkout
+- [x] **任务管理工具** - create, update, delete, list, complete, get with priority and tags
+- [x] **笔记编辑工具** - Markdown支持, 搜索, 标签管理
+- [x] **技能框架系统** - Skill trait, Registry, Executor with 5 built-in skills
 - [x] 内存管理模块
 - [x] 插件系统架构
 - [x] 语音输入模式
@@ -503,6 +507,7 @@ Overall Performance Improvement: 60%
 - [x] 项目初始化
 - [x] 安装脚本
 - [x] 压力测试框架
+- [x] 测试覆盖 (工具、技能、集成测试)
 
 ### 进行中 🚧
 - [ ] API 流式响应优化
@@ -513,6 +518,7 @@ Overall Performance Improvement: 60%
 - [ ] GUI 版本 (egui/iced)
 - [ ] 插件市场 Web 界面
 - [ ] 多语言支持
+- [ ] 技能系统完整实现 (技能实际执行)
 
 ---
 
