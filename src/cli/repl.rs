@@ -183,7 +183,7 @@ impl Repl {
             println!();
 
             for (i, msg) in self.conversation_history.iter().enumerate() {
-                let (icon, color) = match msg.role.as_str() {
+                let (_icon, _color) = match msg.role.as_str() {
                     "user" => ("●", "truecolor(255, 140, 66)"),
                     "assistant" => ("●", "truecolor(147, 112, 219)"),
                     _ => ("●", "bright_black"),

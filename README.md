@@ -257,13 +257,26 @@ claude-code-rust/
 
 ## 🚀 快速开始
 
-### 系统要求
+### 安装
+
+#### 前置要求
 
 - **Rust**: 1.75+ (从 [rustup.rs](https://rustup.rs/) 安装)
 - **Git**: 用于克隆仓库
 - **操作系统**: Windows / Linux / macOS
 
-### 安装
+#### Windows 安装注意事项
+
+如果使用 PowerShell，可能需要先执行：
+```powershell
+# 允许执行脚本（仅当前用户）
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+```
+
+如果遇到编译错误，请确保：
+1. 安装了 Visual Studio Build Tools (包含 C++ 桌面开发组件)
+2. 关闭正在运行的 `claude-code.exe` 实例（防止文件被占用）
+3. 如果磁盘空间不足，可以指定其他编译目录
 
 #### 方式一：使用安装脚本 ⚡ **推荐**
 
@@ -274,7 +287,6 @@ git clone https://github.com/lorryjovens-hub/claude-code-rust.git
 cd claude-code-rust
 
 # 运行安装脚本（默认安装到临时目录）
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
 .\scripts\install-windows.ps1
 
 # 或指定安装到D盘
@@ -306,17 +318,56 @@ cd claude-code-rust
 cargo build --release
 
 # 可执行文件位置
-./target/release/claude-code
+# Windows: .\target\release\claude-code.exe
+# Linux/macOS: ./target/release/claude-code
 ```
 
 #### 方式三：指定编译目录（解决磁盘空间问题）
 
 ```bash
-# 使用D盘作为编译目录
+# Windows: 使用D盘作为编译目录
 cargo build --release --target-dir "D:\claude-code\target"
 
 # 可执行文件位置
 D:\claude-code\target\release\claude-code.exe
+
+# Linux/macOS: 使用临时目录
+cargo build --release --target-dir "/tmp/claude-code-target"
+```
+
+#### 常见编译问题解决
+
+**问题1: "拒绝访问" / "Access Denied"**
+```
+错误: failed to remove file `claude-code.exe`
+原因: 程序正在运行中
+解决: 关闭所有正在运行的 claude-code 实例后重试
+```
+
+**问题2: 磁盘空间不足**
+```
+解决: 使用 --target-dir 参数指定其他磁盘编译
+```
+
+**问题3: C++ 编译器未找到**
+```
+Windows: 安装 Visual Studio Build Tools
+Linux: 安装 build-essential (Ubuntu/Debian) 或 gcc-c++ (CentOS/RHEL)
+macOS: 安装 Xcode Command Line Tools: xcode-select --install
+```
+
+**问题4: 网络超时**
+```
+解决: 配置 Rust 镜像源
+# Windows (PowerShell)
+$env:RUSTUP_DIST_SERVER="https://mirrors.tuna.tsinghua.edu.cn/rustup"
+$env:CARGO_REGISTRIES_CRATES_IO_PROTOCOL="sparse"
+$env:CARGO_REGISTRY_INDEX="https://mirrors.tuna.tsinghua.edu.cn/git/crates.io-index.git"
+
+# Linux/macOS
+export RUSTUP_DIST_SERVER=https://mirrors.tuna.tsinghua.edu.cn/rustup
+export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+export CARGO_REGISTRY_INDEX=https://mirrors.tuna.tsinghua.edu.cn/git/crates.io-index.git
 ```
 
 ### 配置 API

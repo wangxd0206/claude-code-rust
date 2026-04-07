@@ -26,6 +26,14 @@ Thumbs.db
 # Config (keep template)
 settings.json
 !settings.json.template
+.env
+!.env.example
 
 # Logs
 *.log
+
+# Temporary directories
+gui-tauri/
+node_modules/
+claude-code-main*/
+claude-code-rev-main/

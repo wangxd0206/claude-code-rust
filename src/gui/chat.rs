@@ -10,8 +10,8 @@
 
 use egui::{Color32, RichText, ScrollArea, TextEdit, Ui, Vec2, Frame, Stroke, Rounding, Margin, Layout, Align};
 use chrono::{DateTime, Utc};
-use super::syntax_highlight::{format_code_block, CodeHighlighter};
-use super::tool_calls::{ToolCall, ToolCallManager};
+use super::syntax_highlight::format_code_block;
+use super::tool_calls::ToolCall;
 
 /// A chat message - matches Claude.ai structure
 #[derive(Debug, Clone)]
@@ -85,8 +85,6 @@ pub struct ChatPanel {
     pub input_text: String,
     pub is_loading: bool,
     pub scroll_to_bottom: bool,
-    highlighter: CodeHighlighter,
-    tool_manager: ToolCallManager,
 
     /// Callback for sending messages
     on_send_message: Option<Box<dyn Fn(Vec<crate::api::ChatMessage>) + Send>>,
@@ -102,8 +100,6 @@ impl Default for ChatPanel {
             input_text: String::new(),
             is_loading: false,
             scroll_to_bottom: true,
-            highlighter: CodeHighlighter::new(),
-            tool_manager: ToolCallManager::default(),
             on_send_message: None,
         }
     }
@@ -333,7 +329,7 @@ impl ChatPanel {
             });
     }
 
-    fn render_user_avatar(&self, ui: &mut Ui, theme: &super::Theme) {
+    fn render_user_avatar(&self, ui: &mut Ui, _theme: &super::Theme) {
         Frame::none()
             .fill(Color32::from_rgb(80, 80, 80))
             .rounding(Rounding::same(8.0))
@@ -817,7 +813,7 @@ enum ContentPart<'a> {
     InlineCode(&'a str),
 }
 
-fn split_by_code_blocks(content: &str) -> Vec<ContentPart> {
+fn split_by_code_blocks(content: &str) -> Vec<ContentPart<'_>> {
     let mut parts = Vec::new();
     let mut remaining = content;
 
@@ -859,7 +855,7 @@ fn split_by_code_blocks(content: &str) -> Vec<ContentPart> {
     parts
 }
 
-fn split_inline_code(text: &str) -> Vec<ContentPart> {
+fn split_inline_code(text: &str) -> Vec<ContentPart<'_>> {
     let mut parts = Vec::new();
     let mut remaining = text;
 
