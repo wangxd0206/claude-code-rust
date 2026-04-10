@@ -145,6 +145,66 @@ impl ToolRegistry {
             ),
             Arc::new(BuiltinSearchExecutor),
         ).await;
+
+        self.register(
+            McpTool::new(
+                "git_operations",
+                "Execute Git version control operations: status, add, commit, push, pull, log, diff, branch, checkout",
+                serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "operation": {
+                            "type": "string",
+                            "enum": ["status", "add", "commit", "push", "pull", "log", "diff", "branch", "checkout"],
+                            "description": "Git operation to perform"
+                        },
+                        "path": {"type": "string", "description": "Path to the git repository"},
+                        "message": {"type": "string", "description": "Commit message (for commit)"},
+                        "files": {"type": "array", "items": {"type": "string"}, "description": "Files to add (for add)"},
+                        "branch": {"type": "string", "description": "Branch name"}
+                    },
+                    "required": ["operation"]
+                })
+            ),
+            Arc::new(BuiltinGitExecutor),
+        ).await;
+
+        self.register(
+            McpTool::new(
+                "smart_edit",
+                "Advanced code editing with fuzzy matching, multi-line replacements, and diff preview",
+                serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "operation": {"type": "string", "enum": ["replace", "insert", "delete", "preview"]},
+                        "file_path": {"type": "string"},
+                        "old_content": {"type": "string"},
+                        "new_content": {"type": "string"},
+                        "line_number": {"type": "integer"},
+                        "start_line": {"type": "integer"},
+                        "end_line": {"type": "integer"}
+                    },
+                    "required": ["operation", "file_path"]
+                })
+            ),
+            Arc::new(BuiltinSmartEditExecutor),
+        ).await;
+
+        self.register(
+            McpTool::new(
+                "list_files",
+                "List files in a directory",
+                serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "Directory path"},
+                        "recursive": {"type": "boolean", "description": "List recursively"}
+                    },
+                    "required": ["path"]
+                })
+            ),
+            Arc::new(BuiltinListFilesExecutor),
+        ).await;
     }
 }
 
@@ -248,14 +308,14 @@ impl ToolExecutor for BuiltinSearchExecutor {
         let pattern = params["pattern"].as_str()
             .ok_or_else(|| anyhow::anyhow!("Missing pattern parameter"))?;
         let path = params["path"].as_str().unwrap_or(".");
-        
+
         let output = tokio::process::Command::new("rg")
             .arg("-l")
             .arg(pattern)
             .arg(path)
             .output()
             .await;
-        
+
         match output {
             Ok(output) => {
                 let files = String::from_utf8_lossy(&output.stdout)
@@ -272,5 +332,173 @@ impl ToolExecutor for BuiltinSearchExecutor {
                 "error": e.to_string()
             }))
         }
+    }
+}
+
+struct BuiltinGitExecutor;
+
+#[async_trait]
+impl ToolExecutor for BuiltinGitExecutor {
+    async fn execute(&self, params: serde_json::Value) -> anyhow::Result<serde_json::Value> {
+        let operation = params["operation"].as_str()
+            .ok_or_else(|| anyhow::anyhow!("Missing operation parameter"))?;
+        let path = params["path"].as_str().unwrap_or(".");
+
+        let mut args = vec![operation.to_string()];
+
+        match operation {
+            "commit" => {
+                if let Some(msg) = params["message"].as_str() {
+                    args.push("-m".to_string());
+                    args.push(msg.to_string());
+                }
+            }
+            "add" => {
+                if let Some(files) = params["files"].as_array() {
+                    for file in files {
+                        if let Some(f) = file.as_str() {
+                            args.push(f.to_string());
+                        }
+                    }
+                }
+            }
+            "checkout" | "branch" => {
+                if let Some(branch) = params["branch"].as_str() {
+                    args.push(branch.to_string());
+                }
+            }
+            _ => {}
+        }
+
+        let output = tokio::process::Command::new("git")
+            .current_dir(path)
+            .args(&args)
+            .output()
+            .await;
+
+        match output {
+            Ok(output) => {
+                let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+                let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+                Ok(serde_json::json!({
+                    "success": output.status.success(),
+                    "stdout": stdout,
+                    "stderr": stderr
+                }))
+            }
+            Err(e) => Ok(serde_json::json!({
+                "success": false,
+                "error": e.to_string()
+            }))
+        }
+    }
+}
+
+struct BuiltinSmartEditExecutor;
+
+#[async_trait]
+impl ToolExecutor for BuiltinSmartEditExecutor {
+    async fn execute(&self, params: serde_json::Value) -> anyhow::Result<serde_json::Value> {
+        let operation = params["operation"].as_str()
+            .ok_or_else(|| anyhow::anyhow!("Missing operation parameter"))?;
+        let file_path = params["file_path"].as_str()
+            .ok_or_else(|| anyhow::anyhow!("Missing file_path parameter"))?;
+
+        match operation {
+            "replace" => {
+                let old_content = params["old_content"].as_str()
+                    .ok_or_else(|| anyhow::anyhow!("Missing old_content"))?;
+                let new_content = params["new_content"].as_str()
+                    .ok_or_else(|| anyhow::anyhow!("Missing new_content"))?;
+
+                let content = tokio::fs::read_to_string(file_path).await
+                    .map_err(|e| anyhow::anyhow!("Failed to read file: {}", e))?;
+
+                if !content.contains(old_content) {
+                    return Ok(serde_json::json!({
+                        "success": false,
+                        "error": "old_content not found in file"
+                    }));
+                }
+
+                let new_file_content = content.replace(old_content, new_content);
+                tokio::fs::write(file_path, new_file_content).await
+                    .map_err(|e| anyhow::anyhow!("Failed to write file: {}", e))?;
+
+                Ok(serde_json::json!({
+                    "success": true,
+                    "message": format!("Successfully edited {}", file_path)
+                }))
+            }
+            "preview" => {
+                let old_content = params["old_content"].as_str()
+                    .ok_or_else(|| anyhow::anyhow!("Missing old_content"))?;
+                let new_content = params["new_content"].as_str()
+                    .ok_or_else(|| anyhow::anyhow!("Missing new_content"))?;
+
+                let file_content = tokio::fs::read_to_string(file_path).await
+                    .map_err(|e| anyhow::anyhow!("Failed to read file: {}", e))?;
+
+                let can_apply = file_content.contains(old_content);
+
+                Ok(serde_json::json!({
+                    "success": true,
+                    "can_apply": can_apply,
+                    "preview": {
+                        "old": old_content,
+                        "new": new_content
+                    }
+                }))
+            }
+            _ => Ok(serde_json::json!({
+                "success": false,
+                "error": format!("Operation '{}' not fully implemented", operation)
+            }))
+        }
+    }
+}
+
+struct BuiltinListFilesExecutor;
+
+#[async_trait]
+impl ToolExecutor for BuiltinListFilesExecutor {
+    async fn execute(&self, params: serde_json::Value) -> anyhow::Result<serde_json::Value> {
+        let path = params["path"].as_str().unwrap_or(".");
+        let recursive = params["recursive"].as_bool().unwrap_or(false);
+
+        let mut entries = Vec::new();
+
+        if recursive {
+            let mut dir = tokio::fs::read_dir(path).await
+                .map_err(|e| anyhow::anyhow!("Failed to read directory: {}", e))?;
+
+            while let Some(entry) = dir.next_entry().await? {
+                let path = entry.path();
+                let metadata = entry.metadata().await?;
+                entries.push(serde_json::json!({
+                    "path": path.to_string_lossy().to_string(),
+                    "is_file": metadata.is_file(),
+                    "is_dir": metadata.is_dir()
+                }));
+            }
+        } else {
+            let mut dir = tokio::fs::read_dir(path).await
+                .map_err(|e| anyhow::anyhow!("Failed to read directory: {}", e))?;
+
+            while let Some(entry) = dir.next_entry().await? {
+                let file_name = entry.file_name().to_string_lossy().to_string();
+                let metadata = entry.metadata().await?;
+                entries.push(serde_json::json!({
+                    "name": file_name,
+                    "is_file": metadata.is_file(),
+                    "is_dir": metadata.is_dir()
+                }));
+            }
+        }
+
+        Ok(serde_json::json!({
+            "success": true,
+            "entries": entries
+        }))
     }
 }

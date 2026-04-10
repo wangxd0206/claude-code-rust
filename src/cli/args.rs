@@ -20,7 +20,7 @@ impl Cli {
 
         match &self.command {
             Some(super::Commands::Repl { prompt }) => {
-                self.run_repl(state, prompt.clone())?;
+                self.run_repl(state, prompt.clone()).await?;
             }
             Some(super::Commands::Query { prompt }) => {
                 self.run_query(state, prompt.clone()).await?;
@@ -67,8 +67,12 @@ impl Cli {
             Some(super::Commands::Skills { action }) => {
                 self.run_skills(action).await?;
             }
+            Some(super::Commands::Rust) => {
+                // Rust command is just an alias for starting the REPL
+                self.run_repl(state, None).await?;
+            }
             None => {
-                self.run_repl(state, None)?;
+                self.run_repl(state, None).await?;
             }
         }
 
@@ -88,9 +92,9 @@ impl Cli {
         println!();
     }
 
-    fn run_repl(&self, state: crate::state::AppState, prompt: Option<String>) -> anyhow::Result<()> {
+    async fn run_repl(&self, state: crate::state::AppState, prompt: Option<String>) -> anyhow::Result<()> {
         let mut repl = crate::cli::repl::Repl::new(state);
-        repl.start(prompt)?;
+        repl.start(prompt).await?;
         Ok(())
     }
 

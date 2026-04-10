@@ -9,6 +9,12 @@ pub mod list_files;
 pub mod git_operations;
 pub mod task_management;
 pub mod note_edit;
+pub mod smart_edit;
+pub mod glob_tool;
+pub mod grep_tool;
+pub mod advanced;
+pub mod bash_security;
+pub mod sandbox;
 
 pub use file_read::FileReadTool;
 pub use file_edit::FileEditTool;
@@ -19,6 +25,23 @@ pub use list_files::ListFilesTool;
 pub use git_operations::GitOperationsTool;
 pub use task_management::TaskManagementTool;
 pub use note_edit::NoteEditTool;
+pub use smart_edit::SmartEditTool;
+pub use glob_tool::GlobTool;
+pub use grep_tool::GrepTool;
+pub use bash_security::BashSecurityTool;
+pub use sandbox::SandboxTool;
+
+pub use advanced::{
+    WorkerTool, TeamTool, CronTool, LspTool, McpToolBridge,
+    WebFetchTool, WebSearchTool, AskQuestionTool, PermissionTool,
+    AgentTool, PlanModeTool, WorktreeTool, BriefTool,
+    TodoWriteTool, ToolSearchTool, NotebookEditTool, PowerShellTool, BashTool,
+    ConfigTool,
+    TaskCreateTool, TaskGetTool, TaskListTool, TaskUpdateTool, TaskOutputTool, TaskStopTool,
+    SendMessageTool,
+    ListMcpResourcesTool, ReadMcpResourceTool, McpAuthTool, RemoteTriggerTool, SyntheticOutputTool,
+    SkillTool,
+};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -84,7 +107,7 @@ impl ToolRegistry {
         let mut registry = Self {
             tools: HashMap::new(),
         };
-        
+
         // Register built-in tools
         registry.register(Box::new(file_read::FileReadTool::new()));
         registry.register(Box::new(file_edit::FileEditTool::new()));
@@ -95,7 +118,44 @@ impl ToolRegistry {
         registry.register(Box::new(git_operations::GitOperationsTool::new()));
         registry.register(Box::new(task_management::TaskManagementTool::new()));
         registry.register(Box::new(note_edit::NoteEditTool::new()));
-        
+        registry.register(Box::new(glob_tool::GlobTool::new()));
+        registry.register(Box::new(grep_tool::GrepTool::new()));
+        registry.register(Box::new(bash_security::BashSecurityTool::new()));
+        registry.register(Box::new(sandbox::SandboxTool::new()));
+
+        registry.register(Box::new(advanced::WorkerTool::new()));
+        registry.register(Box::new(advanced::TeamTool::new()));
+        registry.register(Box::new(advanced::CronTool::new()));
+        registry.register(Box::new(advanced::LspTool::new()));
+        registry.register(Box::new(advanced::McpToolBridge::new()));
+        registry.register(Box::new(advanced::WebFetchTool::new()));
+        registry.register(Box::new(advanced::WebSearchTool::new()));
+        registry.register(Box::new(advanced::AskQuestionTool::new()));
+        registry.register(Box::new(advanced::PermissionTool::new()));
+        registry.register(Box::new(advanced::AgentTool::new()));
+        registry.register(Box::new(advanced::PlanModeTool::new()));
+        registry.register(Box::new(advanced::WorktreeTool::new()));
+        registry.register(Box::new(advanced::BriefTool::new()));
+        registry.register(Box::new(advanced::TodoWriteTool::new()));
+        registry.register(Box::new(advanced::ToolSearchTool::new()));
+        registry.register(Box::new(advanced::NotebookEditTool::new()));
+        registry.register(Box::new(advanced::PowerShellTool::new()));
+        registry.register(Box::new(advanced::BashTool::new()));
+        registry.register(Box::new(advanced::ConfigTool::new()));
+        registry.register(Box::new(advanced::TaskCreateTool::new()));
+        registry.register(Box::new(advanced::TaskGetTool::new()));
+        registry.register(Box::new(advanced::TaskListTool::new()));
+        registry.register(Box::new(advanced::TaskUpdateTool::new()));
+        registry.register(Box::new(advanced::TaskOutputTool::new()));
+        registry.register(Box::new(advanced::TaskStopTool::new()));
+        registry.register(Box::new(advanced::SendMessageTool::new()));
+        registry.register(Box::new(advanced::ListMcpResourcesTool::new()));
+        registry.register(Box::new(advanced::ReadMcpResourceTool::new()));
+        registry.register(Box::new(advanced::McpAuthTool::new()));
+        registry.register(Box::new(advanced::RemoteTriggerTool::new()));
+        registry.register(Box::new(advanced::SyntheticOutputTool::new()));
+        registry.register(Box::new(advanced::SkillTool::new()));
+
         registry
     }
     

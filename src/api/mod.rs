@@ -25,11 +25,11 @@ impl ApiClient {
     }
 
     pub fn get_api_key(&self) -> Option<String> {
-        self.settings.api.get_api_key()
+        self.settings.api.get_api_key(&self.settings.model)
     }
 
     pub fn get_base_url(&self) -> String {
-        self.settings.api.get_base_url()
+        self.settings.api.get_base_url(&self.settings.model)
     }
 
     pub fn get_model(&self) -> &str {

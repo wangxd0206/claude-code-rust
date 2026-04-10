@@ -104,6 +104,7 @@ impl Settings {
 
         if config_path.exists() {
             let content = std::fs::read_to_string(&config_path)?;
+            let content = remove_bom_and_normalize(&content);
             let settings: Settings = serde_json::from_str(&content)?;
             Ok(settings)
         } else {
@@ -153,4 +154,13 @@ impl Settings {
         settings.save()?;
         Ok(())
     }
+}
+
+fn remove_bom_and_normalize(content: &str) -> String {
+    let mut chars = content.chars();
+    if chars.next() == Some('\u{FEFF}') {
+        content[3..].to_string()
+    } else {
+        content.to_string()
+    }.lines().map(|line| line.trim_end_matches('\r')).collect::<Vec<_>>().join("\n")
 }

@@ -76,7 +76,7 @@ impl SettingsPanel {
     /// Load settings from configuration
     pub fn load_from_settings(&mut self, settings: &crate::config::Settings) {
         self.api_key = settings.api.api_key.clone().unwrap_or_default();
-        self.base_url = settings.api.get_base_url();
+        self.base_url = settings.api.get_base_url(&settings.model);
         self.model = settings.model.clone();
     }
 

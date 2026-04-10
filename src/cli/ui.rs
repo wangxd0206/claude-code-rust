@@ -32,14 +32,28 @@ pub mod colors {
     pub const MUTED: Color = Color::BrightBlack;
 }
 
-/// Claude Code ASCII Logo
+/// Claude Rust ASCII Logo - Green style
 pub const LOGO: &str = r#"
-   ╭──────────────────────────────────────╮
-   │                                      │
-   │   🟣 Claude Code                     │
-   │      High-Performance Rust Edition   │
-   │                                      │
-   ╰──────────────────────────────────────╯
+██████╗ ██████╗ ██╗   ██╗██████╗ ███████╗
+  ██╔════╝ ██╔══██╗██║   ██║██╔══██╗██╔════╝
+  ██║      ██████╔╝██║   ██║██████╔╝█████╗
+  ██║      ██╔══██╗██║   ██║██╔══██╗██╔══╝
+  ╚██████╗ ██████╔╝╚██████╔╝██████╔╝███████╗
+   ╚═════╝ ╚═════╝  ╚═════╝ ╚═════╝ ╚══════╝
+"#;
+
+/// Claude Rust Banner Logo
+pub const BANNER_LOGO: &str = r#"
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║                                                                  ║
+  ║    ██████╗ ██████╗ ██╗   ██╗██████╗ ███████╗      Rust Edition  ║
+  ║   ██╔════╝ ██╔══██╗██║   ██║██╔══██╗██╔════╝                   ║
+  ║   ██║      ██████╔╝██║   ██║██████╔╝█████╗     ⚡ Blazing Fast  ║
+  ║   ██║      ██╔══██╗██║   ██║██╔══██╗██╔══╝     🦀 Pure Rust    ║
+  ║    ╚██████╗ ██████╔╝╚██████╔╝██████╔╝███████╗  📦 Lightweight  ║
+  ║     ╚═════╝ ╚═════╝  ╚═════╝ ╚═════╝ ╚══════╝                   ║
+  ║                                                                  ║
+  ╚══════════════════════════════════════════════════════════════════╝
 "#;
 
 /// Print the Claude Code welcome banner
@@ -53,24 +67,29 @@ pub fn print_welcome() {
     println!();
 }
 
-/// Print a beautiful gradient-style banner
+/// Print a beautiful green-style banner with ASCII logo
 fn print_gradient_banner() {
-    let banner = r#"
-    ╭────────────────────────────────────────────────────────────╮
-    │                                                            │
-    │     🟣  Claude Code  ·  High-Performance Rust Edition      │
-    │                                                            │
-    │         ⚡ 2.5x faster  ·  📦 97% smaller  ·  🦀 Rust       │
-    │                                                            │
-    ╰────────────────────────────────────────────────────────────╯
+    // Print the main ASCII logo in green
+    for line in LOGO.lines() {
+        println!("{}", line.truecolor(46, 204, 113).bold());
+    }
+    println!();
+    
+    // Print version tag
+    println!("{}", "        High-Performance Rust Edition".truecolor(46, 204, 113).italic());
+    println!();
+    
+    // Print feature highlights
+    let features = r#"
+    ╭────────────────────────────────────────────────────────────────────╮
+    │  ⚡ 2.5x faster  │  📦 97% smaller  │  🦀 Pure Rust  │  🚀 Async  │
+    ╰────────────────────────────────────────────────────────────────────╯
     "#;
-
-    // Print with purple gradient effect
-    for (i, line) in banner.lines().enumerate() {
+    
+    for (i, line) in features.lines().enumerate() {
         let styled = match i {
-            0 | 7 => line.bright_purple().bold(),
-            3 => line.truecolor(200, 150, 255).bold(),
-            5 => line.truecolor(255, 140, 66),
+            0 | 2 => line.truecolor(46, 204, 113),
+            1 => line.truecolor(241, 196, 15),
             _ => line.bright_black(),
         };
         println!("{}", styled);
@@ -79,10 +98,13 @@ fn print_gradient_banner() {
 
 /// Print feature highlights
 fn print_features() {
-    println!("  {}", "Performance:".truecolor(147, 112, 219).bold());
-    println!("    {} 启动速度提升 {} ", "▸".green(), "2.5x".green().bold());
-    println!("    {} 内存占用减少 {} ", "▸".green(), "60%".green().bold());
-    println!("    {} 响应速度提升 {} ", "▸".green(), "40%".green().bold());
+    println!("  {}", "Supported Providers:".truecolor(46, 204, 113).bold());
+    println!("    {} Anthropic Claude", "▸".truecolor(46, 204, 113));
+    println!("    {} OpenAI & Compatible", "▸".truecolor(46, 204, 113));
+    println!("    {} Kimi Code (Moonshot)", "▸".truecolor(46, 204, 113));
+    println!("    {} Doubao (ByteDance)", "▸".truecolor(46, 204, 113));
+    println!("    {} DashScope Qwen", "▸".truecolor(46, 204, 113));
+    println!("    {} xAI Grok", "▸".truecolor(46, 204, 113));
     println!();
     println!("  {}", "Type 'help' for commands, 'exit' to quit".bright_black().italic());
 }
@@ -419,6 +441,51 @@ pub fn init_terminal() {
     #[cfg(windows)]
     {
         let _ = colored::control::set_virtual_terminal(true);
+    }
+}
+
+/// Streaming message state for incremental output
+pub struct StreamingMessage {
+    buffer: String,
+    current_line: String,
+    is_first: bool,
+}
+
+impl StreamingMessage {
+    /// Create a new streaming message
+    pub fn new() -> Self {
+        Self {
+            buffer: String::new(),
+            current_line: String::new(),
+            is_first: true,
+        }
+    }
+
+    /// Add a content chunk and output
+    pub fn add_chunk(&mut self, content: &str) {
+        if self.is_first {
+            self.is_first = false;
+            println!();
+            print!("  {}", "●".truecolor(147, 112, 219).bold());
+            println!(" {}", "Claude".truecolor(200, 150, 255).bold());
+            println!();
+        }
+
+        self.buffer.push_str(content);
+        self.current_line.push_str(content);
+
+        // Output characters as they come
+        for c in content.chars() {
+            print!("{}", c);
+            io::stdout().flush().ok();
+        }
+    }
+
+    /// Finish the streaming message
+    pub fn finish(self) -> String {
+        println!();
+        println!();
+        self.buffer.clone()
     }
 }
 

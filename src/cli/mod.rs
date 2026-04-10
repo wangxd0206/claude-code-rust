@@ -156,6 +156,9 @@ pub enum Commands {
         #[arg(short, long, default_value = "10")]
         iterations: usize,
     },
+
+    /// Alias for starting the Rust version (same as running without command)
+    Rust,
 }
 
 #[derive(Subcommand, Debug)]

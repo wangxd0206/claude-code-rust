@@ -1,5 +1,6 @@
 # Rust
 /target/
+**/target/
 Cargo.lock
 *.pdb
 
@@ -29,11 +30,12 @@ settings.json
 .env
 !.env.example
 
-# Logs
-*.log
-
-# Temporary directories
-gui-tauri/
-node_modules/
-claude-code-main*/
+# Legacy TypeScript source (not needed in Rust version)
 claude-code-rev-main/
+
+# Node dependencies (GUI Tauri)
+gui-tauri/node_modules/
+
+# Build output
+dist/
+build/
