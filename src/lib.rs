@@ -30,6 +30,7 @@ pub mod session;
 pub mod terminal;
 pub mod advanced;
 pub mod skills;
+pub mod performance;
 
 // Feature-gated modules
 #[cfg(feature = "wasm")]
